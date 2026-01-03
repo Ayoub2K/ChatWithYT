@@ -1,38 +1,48 @@
 """
-LLM operations for summary generation and Q&A.
+LLM operations for summary generation and Q&A using Ollama.
 """
-from openai import OpenAI
-from app.config import OPENAI_API_KEY, OPENAI_MODEL
+import requests
+import logging
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+logger = logging.getLogger(__name__)
+
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "llama3.2"
 
 
 def generate_summary(transcript: str) -> str:
     """
-    Generate a summary of the transcript using LLM.
+    Generate a summary of the transcript using local Ollama LLM.
     Summary must be based strictly on transcript content.
     """
-    system_prompt = """You are a helpful assistant that summarizes video transcripts.
+    prompt = f"""You are a helpful assistant that summarizes video transcripts.
 Create a clear, concise summary that captures the main points and key takeaways.
-Base your summary ONLY on the transcript provided. Do not add external information."""
-    
-    user_prompt = f"""Please summarize the following video transcript:
+Base your summary ONLY on the transcript provided. Do not add external information.
 
+Transcript:
 {transcript}
 
-Provide a comprehensive summary that covers the main topics and key points discussed."""
+Please provide a comprehensive summary that covers the main topics and key points discussed."""
     
     try:
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.3,
-        )
+        logger.info("Generating summary with Ollama...")
         
-        summary = response.choices[0].message.content
+        response = requests.post(
+            OLLAMA_API_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.3,
+                }
+            }
+        )
+        response.raise_for_status()
+        
+        summary = response.json()["response"]
+        logger.info(f"Summary generated. Length: {len(summary)} characters")
+        
         return summary
     
     except Exception as e:
@@ -41,21 +51,22 @@ Provide a comprehensive summary that covers the main topics and key points discu
 
 def answer_question(transcript: str, question: str) -> str:
     """
-    Answer a question based strictly on the transcript.
+    Answer a question based strictly on the transcript using local Ollama LLM.
     Will not hallucinate or provide information beyond the transcript.
     """
     # Chunk transcript if it's very long (to fit context window)
     chunked_transcript = chunk_transcript(transcript, max_chars=12000)
     
-    system_prompt = """You are a helpful assistant that answers questions about video transcripts.
+    prompt = f"""You are a helpful assistant that answers questions about video transcripts.
+
 CRITICAL RULES:
 1. Answer questions ONLY based on the transcript provided
 2. If the answer is not in the transcript, respond with "Not found in this video"
 3. Do not use external knowledge or make assumptions
 4. Quote relevant parts of the transcript when appropriate
-5. Be concise and accurate"""
-    
-    user_prompt = f"""Transcript:
+5. Be concise and accurate
+
+Transcript:
 {chunked_transcript}
 
 Question: {question}
@@ -63,16 +74,24 @@ Question: {question}
 Answer based ONLY on the transcript above. If the information is not in the transcript, say "Not found in this video"."""
     
     try:
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.0,  # Use 0 for most deterministic answers
-        )
+        logger.info(f"Answering question with Ollama: {question}")
         
-        answer = response.choices[0].message.content
+        response = requests.post(
+            OLLAMA_API_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.0,  # Use 0 for most deterministic answers
+                }
+            }
+        )
+        response.raise_for_status()
+        
+        answer = response.json()["response"]
+        logger.info(f"Answer generated. Length: {len(answer)} characters")
+        
         return answer
     
     except Exception as e:

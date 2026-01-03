@@ -1,16 +1,21 @@
 """
-Speech-to-text conversion using OpenAI Whisper API.
+Speech-to-text conversion using local Whisper model.
 """
 import os
-from openai import OpenAI
-from app.config import OPENAI_API_KEY
+import whisper
+import logging
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+logger = logging.getLogger(__name__)
+
+# Load Whisper model once (cached)
+# Options: tiny, base, small, medium, large
+# base = good balance of speed/accuracy for prototypes
+model = whisper.load_model("base")
 
 
 def transcribe_audio(audio_path: str) -> str:
     """
-    Transcribe audio file to text using OpenAI Whisper API.
+    Transcribe audio file to text using local Whisper model.
     
     Args:
         audio_path: Path to audio file (mp3, mp4, wav, etc.)
@@ -22,31 +27,15 @@ def transcribe_audio(audio_path: str) -> str:
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
     
     try:
-        with open(audio_path, "rb") as audio_file:
-            # Use Whisper API for transcription
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file,
-                response_format="text"
-            )
+        logger.info(f"Transcribing audio with local Whisper model: {audio_path}")
         
-        # The API returns text directly when response_format="text"
+        # Transcribe using local Whisper
+        result = model.transcribe(audio_path)
+        
+        transcript = result["text"]
+        logger.info(f"Transcription completed. Length: {len(transcript)} characters")
+        
         return transcript
     
     except Exception as e:
         raise Exception(f"Transcription failed: {str(e)}")
-
-
-def transcribe_audio_local(audio_path: str) -> str:
-    """
-    Alternative: Transcribe using local Whisper model.
-    Uncomment and use this if you want to avoid API costs.
-    Requires: pip install openai-whisper
-    
-    import whisper
-    
-    model = whisper.load_model("base")
-    result = model.transcribe(audio_path)
-    return result["text"]
-    """
-    pass
