@@ -3,10 +3,6 @@ Configuration settings and environment variables.
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Directory Configuration
 BASE_DIR = Path(__file__).parent.parent

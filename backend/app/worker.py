@@ -97,8 +97,9 @@ def download_audio(url: str, job_id: str) -> str:
             'preferredquality': '192',
         }],
         'outtmpl': str(temp_dir / job_id),
-        'quiet': True,
-        'no_warnings': True,
+        'quiet': False,
+        'no_warnings': False,
+        'ffmpeg_location': str(Path(__file__).parent.parent),  # Point to backend folder
     }
     
     try:
