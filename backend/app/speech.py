@@ -18,7 +18,7 @@ else:
 
 # Load Whisper model once (cached)
 # Options: tiny, base, small, medium, large
-model = whisper.load_model("large")
+model = whisper.load_model("small") # small for prototyping; change as needed
 
 def transcribe_audio(audio_path: str) -> str:
     """
