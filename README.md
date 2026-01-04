@@ -1,10 +1,10 @@
-# YouTube Transcript & Q&A Backend
+# ChatWithYT
 
-Convert any YouTube video into searchable text with AI-powered summaries and Q&A. Runs 100% locally on your machine - no API costs, complete privacy.
+Convert any video into searchable text with AI-powered summaries and Q&A. Runs 100% locally on your machine - no API costs, complete privacy.
 
 ## What It Does
 
-1. **Paste a YouTube URL** → Downloads audio
+1. **Paste a YT URL** → Downloads audio
 2. **Transcribes with Whisper** → Converts speech to text (GPU-accelerated)
 3. **Generates summary** → Creates AI summary with Ollama
 4. **Ask questions** → Chat about the video content
@@ -51,7 +51,7 @@ API docs at: http://localhost:8000/docs
 ### Submit a Video
 ```bash
 POST http://localhost:8000/jobs
-Body: {"url": "https://www.youtube.com/watch?v=VIDEO_ID"}
+Body: {"url": "video url"}
 
 Response: {
   "job_id": "...",
