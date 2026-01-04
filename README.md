@@ -100,3 +100,8 @@ With RTX 4070 + Whisper Large model:
 **Slow transcription**: Install PyTorch with CUDA for GPU acceleration
 
 **Chat answers not good**: Upgrade Ollama model with `ollama pull llama3.1:8b`
+
+
+## Disclaimer
+This tool is for personal/educational use. Respect YouTube's Terms of Service 
+and copyright laws. Don't download copyrighted content without permission.
