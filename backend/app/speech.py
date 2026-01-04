@@ -4,14 +4,21 @@ Speech-to-text conversion using local Whisper model.
 import os
 import whisper
 import logging
-
+import torch
 logger = logging.getLogger(__name__)
+
+# Check for GPU availability
+logger.info(f"PyTorch CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    logger.info(f"Whisper will use GPU: {torch.cuda.get_device_name(0)}")
+else:
+    logger.info("Whisper will use CPU")
+
+
 
 # Load Whisper model once (cached)
 # Options: tiny, base, small, medium, large
-# base = good balance of speed/accuracy for prototypes
-model = whisper.load_model("base")
-
+model = whisper.load_model("large")
 
 def transcribe_audio(audio_path: str) -> str:
     """
