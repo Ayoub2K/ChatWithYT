@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "llama3.2"
+OLLAMA_MODEL = "llama3.1:8b"
 
 
 def generate_summary(transcript: str) -> str:
