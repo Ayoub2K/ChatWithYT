@@ -1,185 +1,102 @@
-# YouTube Transcript Backend
+# YouTube Transcript & Q&A Backend
 
-A FastAPI backend that downloads YouTube videos, transcribes them, generates summaries, and allows Q&A strictly grounded in the transcript.
+Convert any YouTube video into searchable text with AI-powered summaries and Q&A. Runs 100% locally on your machine - no API costs, complete privacy.
 
-## Features
+## What It Does
 
-- ✅ Canonical job deduplication per video
-- ✅ Multiple users can access same job via different access links
-- ✅ Asynchronous background processing
-- ✅ No authentication system
-- ✅ Shareable access links
-- ✅ OpenAI Whisper for transcription
-- ✅ GPT for summaries and Q&A
+1. **Paste a YouTube URL** → Downloads audio
+2. **Transcribes with Whisper** → Converts speech to text (GPU-accelerated)
+3. **Generates summary** → Creates AI summary with Ollama
+4. **Ask questions** → Chat about the video content
 
-## Setup
+## Quick Start
 
-### 1. Install Dependencies
+### Prerequisites
+- Python 3.10+
+- NVIDIA GPU (recommended) or CPU
+- 10GB free disk space
+
+### Installation
 
 ```bash
+# 1. Install Python dependencies
 pip install -r requirements.txt
+
+# 2. Install ffmpeg
+# Download from: https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+# Extract and copy ffmpeg.exe to the backend folder
+
+# 3. Install Ollama
+# Download from: https://ollama.com/download
+# Then pull a model:
+ollama pull llama3.2
+
+# 4. (Optional) GPU acceleration for Whisper
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
 
-### 2. Install ffmpeg (Required by yt-dlp)
-
-**macOS:**
-```bash
-brew install ffmpeg
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt update
-sudo apt install ffmpeg
-```
-
-**Windows:**
-Download from https://ffmpeg.org/download.html
-
-### 3. Set Environment Variables
-
-Create a `.env` file or export variables:
+### Run
 
 ```bash
-export OPENAI_API_KEY="your-openai-api-key-here"
-export OPENAI_MODEL="gpt-4o-mini"  # Optional, defaults to gpt-4o-mini
+cd backend
+python -m uvicorn app.main:app --reload
 ```
 
-### 4. Run the Server
+Server runs at: http://localhost:8000
 
+API docs at: http://localhost:8000/docs
+
+## Usage
+
+### Submit a Video
 ```bash
-uvicorn app.main:app --reload
-```
+POST http://localhost:8000/jobs
+Body: {"url": "https://www.youtube.com/watch?v=VIDEO_ID"}
 
-The API will be available at `http://localhost:8000`
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── main.py         # FastAPI routes
-│   ├── models.py       # Job data model
-│   ├── db.py          # JSON database manager
-│   ├── worker.py      # Background processing
-│   ├── utils.py       # URL normalization, hashing
-│   ├── llm.py         # Summary and Q&A logic
-│   ├── speech.py      # Whisper transcription
-│   └── config.py      # Configuration
-├── data/              # Database and temp files
-│   ├── jobs.json      # Job storage
-│   └── audio/         # Temporary audio files
-└── requirements.txt   # Python dependencies
-```
-
-## API Endpoints
-
-### 1. Submit Job
-```bash
-POST /jobs
-Content-Type: application/json
-
-{
-  "url": "https://www.youtube.com/watch?v=VIDEO_ID"
-}
-
-Response:
-{
-  "job_id": "abc123...",
+Response: {
+  "job_id": "...",
   "status": "queued",
-  "access_link": "xyz789..."
+  "access_link": "abc123..."
 }
 ```
 
-### 2. Check Status
+### Check Status
 ```bash
-GET /jobs/{access_link}/status
-
-Response:
-{
-  "status": "processing"  # or "queued", "done", "failed"
-}
+GET http://localhost:8000/jobs/{access_link}/status
 ```
 
-### 3. Get Result
+### Get Result
 ```bash
-GET /jobs/{access_link}/result
-
-Response (when done):
-{
-  "status": "done",
-  "transcript": "Full transcript text...",
-  "summary": "Summary of the video..."
-}
+GET http://localhost:8000/jobs/{access_link}/result
 ```
 
-### 4. Chat with Transcript
+### Ask Questions
 ```bash
-POST /jobs/{access_link}/chat
-Content-Type: application/json
-
-{
-  "question": "What was discussed about AI?"
-}
-
-Response:
-{
-  "answer": "The video discussed..."
-}
+POST http://localhost:8000/jobs/{access_link}/chat
+Body: {"question": "What is this video about?"}
 ```
 
-## Key Features Explained
+## Performance
 
-### Canonical Job Deduplication
-- Same YouTube URL always maps to same `job_id` (SHA256 hash)
-- Video is processed only once
-- Multiple users get different `access_link` tokens pointing to same job
+With RTX 4070 + Whisper Large model:
+- **10-min video**: ~4-6 minutes total
+- **Transcription**: ~3-5 minutes (GPU)
+- **Summary**: ~10-30 seconds
 
-### Access Links
-- Each request generates a new unguessable access token
-- No authentication needed
-- Links are shareable
+## Tech Stack
 
-### Background Processing
-- Jobs run asynchronously using FastAPI BackgroundTasks
-- Status updates as job progresses: queued → processing → done/failed
+- **Backend**: FastAPI + Python
+- **Transcription**: OpenAI Whisper (local)
+- **LLM**: Ollama (llama3.2)
+- **Audio**: yt-dlp + ffmpeg
+- **Storage**: JSON file database
 
-### Grounded Q&A
-- Chat answers are strictly based on transcript
-- LLM instructed to say "Not found in this video" if answer not in transcript
-- No hallucination or external knowledge
+## Troubleshooting
 
-## Testing
+**"Module not found" error**: Make sure you're in the `backend` folder when running uvicorn
 
-```bash
-# Submit a job
-curl -X POST http://localhost:8000/jobs \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+**"ffmpeg not found"**: Copy `ffmpeg.exe` to your `backend` folder
 
-# Check status
-curl http://localhost:8000/jobs/{access_link}/status
+**Slow transcription**: Install PyTorch with CUDA for GPU acceleration
 
-# Get result
-curl http://localhost:8000/jobs/{access_link}/result
-
-# Ask a question
-curl -X POST http://localhost:8000/jobs/{access_link}/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is this video about?"}'
-```
-
-## Notes
-
-- Temporary audio files are automatically deleted after transcription
-- Database is a simple JSON file for prototype simplicity
-- No retry logic or rate limiting (prototype intentionally)
-- English language only
-- Transcripts are truncated to 12,000 chars for Q&A to fit context window
-
-## Requirements
-
-- Python 3.12
-- OpenAI API key with access to Whisper and GPT models
-- ffmpeg installed on system
-- Internet connection for YouTube downloads
+**Chat answers not good**: Upgrade Ollama model with `ollama pull llama3.1:8b`
