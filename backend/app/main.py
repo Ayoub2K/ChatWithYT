@@ -10,7 +10,7 @@ from app.db import DatabaseManager
 from app.worker import process_video
 from app.utils import normalize_url, generate_job_id, generate_access_link
 from app.models import JobStatus
-from fastapi.middleware.cors import CORSMiddleware
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,17 +18,10 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="YouTube Transcript API")
 db = DatabaseManager()
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class SubmitJobRequest(BaseModel):
     url: str
+    whisper_model: str = "base"  # default to base
 
 
 class SubmitJobResponse(BaseModel):

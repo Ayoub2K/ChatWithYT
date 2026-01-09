@@ -23,6 +23,11 @@
                     placeholder="Paste YouTube URL or Access Link here..."
                     onkeypress="if(event.key==='Enter') handleSubmit()"
                 >
+                <select id="whisperModel" class="model-select">
+                    <option value="tiny">Fast</option>
+                    <option value="base" selected>Balanced</option>
+                    <option value="medium">Best</option>
+                </select>
                 <button id="submitBtn" onclick="handleSubmit()">Submit</button>
             </div>
             <p style="text-align: center; font-size: 14px; color: var(--text-secondary); margin-top: 10px;">

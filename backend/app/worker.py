@@ -14,15 +14,18 @@ from app.config import TEMP_AUDIO_DIR
 logger = logging.getLogger(__name__)
 
 
-def process_video(job_id: str, url: str, db):
+def process_video(job_id: str, url: str, db, whisper_model: str = "base"):
     """
     Complete video processing pipeline:
     1. Download audio
     2. Transcribe to text
     3. Generate summary
     4. Clean up
+    
+    Args:
+        whisper_model: One of "tiny", "base", "medium"
     """
-    logger.info(f"Starting processing for job {job_id}")
+    logger.info(f"Starting processing for job {job_id} with Whisper model: {whisper_model}")
     audio_path = None
     
     try:
@@ -35,7 +38,7 @@ def process_video(job_id: str, url: str, db):
         
         # Step 2: Transcribe audio
         logger.info(f"Transcribing audio for job {job_id}")
-        transcript = transcribe_audio(audio_path)
+        transcript = transcribe_audio(audio_path, whisper_model)
         
         if not transcript or not transcript.strip():
             raise ValueError("Transcription resulted in empty text")

@@ -78,6 +78,7 @@ async function loadSharedLink(accessLink) {
 
 async function submitVideo() {
     const url = document.getElementById('youtubeUrl').value.trim();
+    const whisperModel = document.getElementById('whisperModel').value;
     
     if (!url) {
         showError('Please enter a YouTube URL');
@@ -95,7 +96,10 @@ async function submitVideo() {
         const response = await fetch(`${API_BASE}/jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
+            body: JSON.stringify({ 
+                url,
+                whisper_model: whisperModel 
+            })
         });
 
         if (!response.ok) {
