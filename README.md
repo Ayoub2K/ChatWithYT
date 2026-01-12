@@ -22,16 +22,12 @@ Convert any video into searchable text with AI-powered summaries and Q&A. Runs 1
 # 1. Install Python dependencies
 pip install -r requirements.txt
 
-# 2. Install ffmpeg
-# Download from: https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-# Extract and copy ffmpeg.exe to the backend folder
-
-# 3. Install Ollama
+# 2. Install Ollama
 # Download from: https://ollama.com/download
 # Then pull a model:
 ollama pull llama3.2
 
-# 4. (Optional) GPU acceleration for Whisper
+# 3. (Optional) GPU acceleration for Whisper
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
 
